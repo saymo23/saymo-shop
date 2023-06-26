@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ProductsModule } from './products/products.module';
 
 @Module({
   imports: [
@@ -15,7 +16,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       password: process.env.DB_PASS,
       autoLoadEntities: true, //Automaticamente carga las entidades del TypeOrm
       synchronize: true //Sincroniza la base de datos en todos los entornos conectados, algo asi como websockets
-    })
+    }),
+
+    ProductsModule
   ],
   controllers: [],
   providers: [],

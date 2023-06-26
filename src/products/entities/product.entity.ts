@@ -45,6 +45,8 @@ export class Product {
   })
   status: number
 
+  //El beforeinsert es un proceso que puedes realizar antes de
+  //que la información se mande a insertar.
   @BeforeInsert()
   checkSlugInsert(){
     if( !this.slug ){

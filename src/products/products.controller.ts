@@ -19,8 +19,8 @@ export class ProductsController {
   }
 
   @Get(':id')
-  async findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.productsService.findOne(id);
+  async findOne(@Param('term') term: string) {    
+    return this.productsService.findOne(term);
   }
 
   @Patch(':id')

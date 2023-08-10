@@ -8,6 +8,7 @@ import { NotFoundError } from 'rxjs';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 
 import { validate as isUUID } from 'uuid'
+import { ProductImage } from './entities/product-image.entity';
 
 @Injectable()
 export class ProductsService {
@@ -18,21 +19,34 @@ export class ProductsService {
   constructor(
 
     @InjectRepository(Product)
-    private readonly productRepository: Repository<Product>
+    private readonly productRepository: Repository<Product>,
+
+    @InjectRepository(ProductImage)
+    private readonly productImageRepository: Repository<ProductImage>
+
 
   ){}
   
   async create(createProductDto: CreateProductDto) {
+
     
     try {
+      const { images = [], ...productoDetails } = createProductDto
 
       const product = this.productRepository.create(
-        createProductDto
+        {
+          ...productoDetails,
+          images: images.map(
+            image => this.productImageRepository.create(      
+              { url: image }
+            )
+        ) 
+      }
       )
 
       await this.productRepository.save( product );
 
-      return product
+      return  { ...product, images }
 
     } catch (error) {
         this.handleDBExceptions(error);
@@ -40,19 +54,24 @@ export class ProductsService {
 
   }
 
-  findAll(paginationDto: PaginationDto) {
+  async findAll(paginationDto: PaginationDto) {
     try {
       const { limit = 10, offset = 0 } = paginationDto;
 
-      const product = this.productRepository.find({
+      const products = await this.productRepository.find({
           take: limit,
-          skip: offset
-        }
-        //TODO: Relaciones
+          skip: offset,
+          relations:{
+            images: true
+          }
+        },
       );
 
 
-      return product;
+      return products.map( product => ({
+        ...product,
+        images: product.images.map(img => img.url)
+      }))
     } catch (error) {
       this.handleDBExceptions(error);
     }
@@ -69,11 +88,16 @@ export class ProductsService {
       // product = await this.productRepository.findOneBy({
       //   slug: term
       // });
-      const queryBuilder = this.productRepository.createQueryBuilder();
-      product = await queryBuilder.where(`UPPER(title) =:title or slug =:slug`, {
-        title: term.toUpperCase(), 
-        slug: term.toLowerCase()
-      }).getOne();
+      const queryBuilder = this.productRepository.createQueryBuilder('prod');
+      product = await queryBuilder
+                      .where(
+                        `UPPER(title) =:title or slug =:slug`, 
+                        {
+                          title: term.toUpperCase(), 
+                          slug: term.toLowerCase()
+                        })
+                      .leftJoinAndSelect('prod.images', 'prodImages')
+                      .getOne();
     }
 
     if (!product) 
@@ -82,11 +106,20 @@ export class ProductsService {
     return product;
   }
 
+  async findOnePlain( term: string ){
+    const { images = [], ...rest } = await this.findOne( term );
+    return {
+      ...rest,
+      images: images.map(image => image.url )
+    }
+  }
+
   async update(id: string, updateProductDto: UpdateProductDto) {
     //El preload sirve para garantizar primero la busqueda del producto, antes de salvarlo
     const product = await this.productRepository.preload({
       id,
-      ...updateProductDto
+      ...updateProductDto,
+      images: []
     })
 
     if(!product)

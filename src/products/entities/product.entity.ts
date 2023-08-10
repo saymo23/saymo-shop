@@ -1,4 +1,5 @@
-import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, BeforeUpdate, Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { ProductImage } from "./product-image.entity";
 
 @Entity()
 export class Product {
@@ -41,7 +42,7 @@ export class Product {
     array: true,
     default: []
   })
-  tags: string[]
+  tags?: string[]
 
   @Column('text')
   gender: string;
@@ -49,7 +50,17 @@ export class Product {
   @Column('int', {
     default: 1
   })
-  status: number
+  status: number;
+
+  @OneToMany(
+    () => ProductImage, //Retorno
+    (productImage) => productImage.product,
+    {
+      cascade: true,
+      eager: true //Este se usa cuando no buscamos con querybuilder
+    }
+  )
+  images?: ProductImage[];
 
   //El beforeinsert es un proceso que puedes realizar antes de
   //que la información se mande a insertar.

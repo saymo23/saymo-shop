@@ -21,6 +21,8 @@ export class ProductsController {
   @Get(':term')
   async findOne(@Param('term') term: string) {
     return this.productsService.findOnePlain(term);
+    //Este findOnePlain es porque se hizo una relación de mucho a uno con las imagenes y se considero que era mejor solo devolver el url algo mas limpio
+    //Consoderar su uso e implementación en otras ocaciones solo para hacer limpiezas en la entrega de los datos.
   }
 
   @Patch(':id')

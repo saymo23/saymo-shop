@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, InternalServerErrorException, Logger, 
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Product } from './entities/product.entity';
 import { NotFoundError } from 'rxjs';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
@@ -16,17 +16,22 @@ export class ProductsService {
   //Para los errores de consola
   private readonly logger = new Logger('ProductsService')
   
+  //? El DataSource es para los query runner, clase 145
+  //@                                                      
   constructor(
 
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
 
     @InjectRepository(ProductImage)
-    private readonly productImageRepository: Repository<ProductImage>
+    private readonly productImageRepository: Repository<ProductImage>,
+
+    private readonly dataSource: DataSource
 
 
   ){}
   
+  //@                                                      
   async create(createProductDto: CreateProductDto) {
 
     
@@ -54,6 +59,7 @@ export class ProductsService {
 
   }
 
+  //@                                                      
   async findAll(paginationDto: PaginationDto) {
     try {
       const { limit = 10, offset = 0 } = paginationDto;
@@ -77,6 +83,7 @@ export class ProductsService {
     }
   }
 
+  //@                                                      
   async findOne(term: string) {
     let product: Product;
 
@@ -106,6 +113,7 @@ export class ProductsService {
     return product;
   }
 
+  //@                                                      
   async findOnePlain( term: string ){
     const { images = [], ...rest } = await this.findOne( term );
     return {
@@ -114,32 +122,76 @@ export class ProductsService {
     }
   }
 
+  
+  /**
+   * update
+   * @param id: string Identificador del objeto
+   * @param updateProductDto: El objeto actualizado y modeado por el DT
+  **/
   async update(id: string, updateProductDto: UpdateProductDto) {
+
+    const { images, ...toUpdate } = updateProductDto;
+
     //El preload sirve para garantizar primero la busqueda del producto, antes de salvarlo
     const product = await this.productRepository.preload({
       id,
-      ...updateProductDto,
-      images: []
+      ...toUpdate
     })
 
     if(!product)
       throw new NotFoundException(`Product with id: ${id} not found `)
 
+    //Controlaremos si viene imagenes (datos relacionales) para comprobar si hay errores en el proceso
+    //Ejemplo: que la imagen no se cargue correctamente o que no haya espacio en el servidor o permisos de escritura, erc.
+    // Esto se hace con el Query Runner, el cual hacer Rollbacks
+
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    //Conectamos
+    await queryRunner.connect();
+    //iniciamos los cambios en la base de datos SIN CONFIRMAR
+    await queryRunner.startTransaction();
+
     try {
-      await this.productRepository.save( product );
-      return product;
+
+      if( images ){
+        //CUIDADO: POSIBLE MEME
+        await queryRunner.manager.delete( ProductImage, 
+                { product: { id } }
+              );
+        product.images = images.map( 
+          image => this.productImageRepository.create({ url: image }))
+      } else {
+        // 
+      }
+
+      await queryRunner.manager.save( product );
+      //await this.productRepository.save( product );
+
+      await queryRunner.commitTransaction();
+      await queryRunner.release();
+      
+      //return product;//Enviamos producto completo
+      return this.findOnePlain(id)//Realizamos una consulta nueva pero ahora con el producto de las imagenes plano
+
+
     } catch (error) {
+
+      await queryRunner.rollbackTransaction();
+
       this.handleDBExceptions(error);
     }
-    return 
+
   }
 
+  //@                                                      
   async remove(id: string) {
     const product = await this.findOne( id );
     await this.productRepository.remove(product);
   }
 
 
+  //@                                                      
   private handleDBExceptions( error:any ){
     if( error.code === '23505' )
       throw new BadRequestException(error.detail);

@@ -170,7 +170,7 @@ export class ProductsService {
 
       await queryRunner.commitTransaction();
       await queryRunner.release();
-      
+
       //return product;//Enviamos producto completo
       return this.findOnePlain(id)//Realizamos una consulta nueva pero ahora con el producto de las imagenes plano
 
@@ -188,6 +188,9 @@ export class ProductsService {
   async remove(id: string) {
     const product = await this.findOne( id );
     await this.productRepository.remove(product);
+
+
+
   }
 
 
@@ -199,6 +202,18 @@ export class ProductsService {
     //this.logger.error(error);
     
     throw new InternalServerErrorException('Help!')
+  }
+
+
+  async deleteAllProducst(){
+    const query = this.productImageRepository.createQueryBuilder('product');
+
+    try{
+      return await query.delete().where({}).execute();
+    }catch(error){
+      this.handleDBExceptions(error);
+    }
+
   }
 
 }

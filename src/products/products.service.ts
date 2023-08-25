@@ -205,11 +205,13 @@ export class ProductsService {
   }
 
 
-  async deleteAllProducst(){
-    const query = this.productImageRepository.createQueryBuilder('product');
+  async deleteAllProducts(){
+    // const query = this.productImageRepository.createQueryBuilder('product');
+    console.log('SEED');
+    
 
     try{
-      return await query.delete().where({}).execute();
+      return await this.productRepository.delete({});
     }catch(error){
       this.handleDBExceptions(error);
     }

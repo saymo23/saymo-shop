@@ -13,4 +13,10 @@
 docker-compose up -d
 ```
 
-6. Wake up: ``` npm run start:dev ```
+6. Execute Seed
+
+```
+GET localhost:3000/seed/seed
+```
+
+7. Wake up: ``` npm run start:dev ```

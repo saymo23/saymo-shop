@@ -207,7 +207,7 @@ export class ProductsService {
 
   async deleteAllProducts(){
     // const query = this.productImageRepository.createQueryBuilder('product');
-    console.log('SEED');
+    console.log('SEED EXECUTED');
     
 
     try{

@@ -11,7 +11,7 @@ export class SeedService {
   ){}
 
   async runSeed() {
-    return await this.insertNewProducts();
+    return await this.insertNewProducts() ? 'SEED EXECUTED' : 'Error';
     // return 'SEED EXECUTED';
   }
 

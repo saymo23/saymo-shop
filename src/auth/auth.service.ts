@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -22,8 +22,18 @@ export class AuthService {
       return user;
       
     } catch (error) {
-      return error
+      this.handleDBErrors(error);
     }
+  }
+
+  private handleDBErrors(error: any) {
+    if(error.code == '23505'){
+      throw new BadRequestException(error.detail);
+    }
+
+    console.log(error);
+    
+
   }
  
 }

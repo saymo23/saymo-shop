@@ -11,8 +11,6 @@ import { AuthModule } from './auth/auth.module';
   imports: [
     ConfigModule.forRoot(),
 
-    ConfigModule,
-
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST,

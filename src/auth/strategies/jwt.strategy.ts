@@ -31,7 +31,7 @@ export class JwtStrategy extends PassportStrategy( Strategy ) {
 
     const user = await this.userRepository.findOneBy({ id });
 
-    console.log(user);
+    // console.log(user);
     
 
     if(!user){ throw new UnauthorizedException('Token not valid') }

@@ -11,7 +11,7 @@ export class UserRoleGuard implements CanActivate {
     private readonly reflector: Reflector
   ) {}
 
-  //? este medoto es importante, requiere sacar boolean | Promise<boolean> | Observable<boolean> 
+  //$ este medoto es importante, requiere sacar boolean | Promise<boolean> | Observable<boolean> 
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {

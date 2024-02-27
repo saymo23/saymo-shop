@@ -1,5 +1,6 @@
-import { BeforeInsert, BeforeUpdate, Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, BeforeUpdate, Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { ProductImage } from "./product-image.entity";
+import { User } from "../../auth/entities/user.entity";
 
 @Entity({ name: 'products' })
 export class Product {
@@ -61,6 +62,13 @@ export class Product {
     }
   )
   images?: ProductImage[];
+
+  @ManyToOne(
+    () => User,
+    (User) => User.product,
+    {eager: true}
+  )
+  user: User
 
   //El beforeinsert es un proceso que puedes realizar antes de
   //que la información se mande a insertar.

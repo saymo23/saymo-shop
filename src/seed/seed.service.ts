@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
+
 import { ProductsService } from 'src/products/products.service';
 import { initialData } from './data/seed-data';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -25,7 +27,7 @@ export class SeedService {
 
     const userDefault = await this.insertUsers();
 
-    await this.insertNewProducts(userDefault);
+    // await this.insertNewProducts(userDefault);
 
     return 'SEED EXECUTED';
 
@@ -35,13 +37,12 @@ export class SeedService {
     //? Eliminamos todos los productos
     await this.productService.deleteAllProducts();
 
-    const queryBuilder = this.userRepository.createQueryBuilder();
+    const queryBuilder = await this.userRepository.createQueryBuilder();
 
     await queryBuilder
     .delete()
     .where({})
     .execute();
-
   }
 
   private async insertUsers() {
@@ -49,10 +50,15 @@ export class SeedService {
     const seedUsers = initialData.users;
 
     const users: User[] = [];
+    
+    console.log(seedUsers);
 
     //$ Preparamos los primemos users
     seedUsers.forEach(user => {
-      users.push( this.userRepository.create( user ) )
+      
+        user.password = bcrypt.hashSync(user.password, 10)
+        
+        users.push( this.userRepository.create( user ) )
     });
 
     //$ Insertamos todos los usuarios al mismo tiempo

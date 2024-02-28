@@ -34,7 +34,7 @@ export const initialData: SeedData = {
         {
             email: 'test@test.com',
             fullName: 'Daniel S',
-            password: '123qwe1',
+            password: '123qwE1',
             roles: ['super-admin', 'admin']
         },
         {
